@@ -1,45 +1,78 @@
-"use client"
+"use client";
+
+import { useEffect } from "react";
 import { useAppSelector } from "@/redux/store";
 import { useDispatch } from "react-redux";
-import { removeBooking } from "@/redux/features/bookSlice";
+import { removeBooking, setBookings } from "@/redux/features/bookSlice";
 import { Button } from "@mui/material";
+import { deleteReservation, getReservations } from "@/libs/api";
+import { useSession } from "next-auth/react";
 
 export default function BookingList() {
-    // 1. ดึงข้อมูลจาก Redux Store (ชื่อ 'bookSlice' ตามที่ตั้งไว้ใน store.ts)
-    const bookingItems = useAppSelector((state) => state.bookSlice.bookItems);
-    const dispatch = useDispatch();
+  const bookingItems = useAppSelector((state) => state.bookSlice.bookItems);
+  const dispatch = useDispatch();
+  const { data: session } = useSession();
 
-    // กรณีไม่มีข้อมูลการจอง
-    if (bookingItems.length === 0) {
-        return (
-            <div className="text-center text-xl font-semibold mt-10">
-                No Venue Booking
-            </div>
-        );
+  const token = session?.user?.token;
+
+  // 🔥 โหลด booking จาก backend
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!token) return;
+
+      const res = await getReservations(token);
+
+      // 🔥 map ให้ตรง interface
+      const formatted = res.data.map((item: any) => ({
+        _id: item._id,
+        nameLastname: item.user?.name || "Unknown",
+        tel: "N/A",
+        venue: item.coworkingSpace?.name || "Unknown",
+        bookDate: item.reservationDate,
+      }));
+
+      dispatch(setBookings(formatted));
+    };
+
+    fetchData();
+  }, [token, dispatch]);
+
+  // 🔥 delete booking
+  const handleDelete = async (id: string) => {
+    if (!token) {
+      alert("Please login");
+      return;
     }
 
-    return (
-        <div className="space-y-4 p-5">
-            {bookingItems.map((item) => (
-                <div 
-                    key={`${item.venue}-${item.bookDate}`} 
-                    className="bg-slate-200 rounded px-5 py-3 shadow-md"
-                >
-                    <div className="text-md"><b>Name-Lastname:</b> {item.nameLastname}</div>
-                    <div className="text-md"><b>Contact-Number:</b> {item.tel}</div>
-                    <div className="text-md"><b>Venue:</b> {item.venue}</div>
-                    <div className="text-md"><b>Date:</b> {item.bookDate}</div>
-                    
-                    <Button 
-                        variant="contained" 
-                        color="error" 
-                        className="mt-2"
-                        onClick={() => dispatch(removeBooking(item))}
-                    >
-                        Cancel Booking
-                    </Button>
-                </div>
-            ))}
+    try {
+      await deleteReservation(token, id);
+      dispatch(removeBooking(id));
+    } catch (err) {
+      alert("Delete failed");
+    }
+  };
+
+  if (bookingItems.length === 0) {
+    return <div className="text-center mt-10">No Booking</div>;
+  }
+
+  return (
+    <div className="space-y-4 p-5">
+      {bookingItems.map((item) => (
+        <div key={item._id} className="bg-slate-200 p-4 rounded">
+          <div><b>Name:</b> {item.nameLastname}</div>
+          <div><b>Venue:</b> {item.venue}</div>
+          <div><b>Date:</b> {item.bookDate}</div>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => handleDelete(item._id)}
+          >
+            Cancel
+          </Button>
         </div>
-    );
+      ))}
+    </div>
+  );
 }

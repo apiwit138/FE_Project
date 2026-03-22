@@ -1,79 +1,64 @@
-"use client"; // 1. Change to client component
+"use client";
 
 import { useState } from "react";
-import { TextField, Select, MenuItem, Button, FormControl, InputLabel } from "@mui/material";
+import { Button, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import dayjs, { Dayjs } from "dayjs";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/redux/store";
-import { addBooking } from "@/redux/features/bookSlice";
-
+import { createReservation } from "@/libs/api";
+import { useSession } from "next-auth/react";
 export default function Reservations() {
-  const dispatch = useDispatch<AppDispatch>();
 
-  // 2. Local states for form inputs
-  const [nameLastname, setNameLastname] = useState("");
-  const [tel, setTel] = useState("");
-  const [venue, setVenue] = useState("Bloom");
+  const [spaceId, setSpaceId] = useState("69a552e756517066dba4a47c"); // default
   const [bookDate, setBookDate] = useState<Dayjs | null>(null);
+  const { data: session } = useSession();
+const token = session?.user?.token;
+  const handleBookVenue = async () => {
+  if (!bookDate) {
+    alert("Please select date");
+    return;
+  }
 
-  const handleBookVenue = () => {
-    if (nameLastname && tel && venue && bookDate) {
-      // 3. Dispatch to Redux store
-      dispatch(
-        addBooking({
-          nameLastname,
-          tel,
-          venue,
-          bookDate: bookDate.format("YYYY-MM-DD"),
-        })
-      );
-      alert("Booking added to Redux Store");
-    } else {
-      alert("Please fill in all fields");
-    }
-  };
+  if (!token) {
+    alert("Please login first");
+    return;
+  }
+
+  try {
+    await createReservation(
+      token,
+      spaceId,
+      bookDate.format("YYYY-MM-DD")
+    );
+
+    alert("Booking success 🔥");
+  } catch (err) {
+    alert("Booking failed");
+  }
+};
 
   return (
     <main className="w-[100%] flex flex-col items-center space-y-4 pt-10">
       <div className="text-xl font-medium">New Booking</div>
 
-      {/* 4. Server Session and Profile display removed as per instructions */}
-
       <div className="w-fit space-y-3 flex flex-col">
-        <TextField
-          variant="standard"
-          name="Name-Lastname"
-          label="Name-Lastname"
-          value={nameLastname}
-          onChange={(e) => setNameLastname(e.target.value)}
-        />
 
-        <TextField
-          variant="standard"
-          name="Contact-Number"
-          label="Contact-Number"
-          value={tel}
-          onChange={(e) => setTel(e.target.value)}
-        />
-
+        {/* 🔥 เลือก Coworking Space (ใช้ id จริง) */}
         <FormControl variant="standard" fullWidth>
           <InputLabel id="venue-label">Venue</InputLabel>
           <Select
             labelId="venue-label"
-            id="venue"
-            value={venue}
-            onChange={(e) => setVenue(e.target.value)}
+            value={spaceId}
+            onChange={(e) => setSpaceId(e.target.value)}
           >
-            <MenuItem value="Bloom">The Bloom Pavilion</MenuItem>
-            <MenuItem value="Spark">Spark Space</MenuItem>
-            <MenuItem value="GrandTable">The Grand Table</MenuItem>
+            <MenuItem value="69a552e756517066dba4a47c">Space D</MenuItem>
+            <MenuItem value="69a552e356517066dba4a479">Space C</MenuItem>
+            <MenuItem value="69a552de56517066dba4a476">Space B</MenuItem>
           </Select>
         </FormControl>
 
-        {/* Using DatePicker directly for easier state management with Redux */}
+        {/* 🔥 Date Picker */}
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DatePicker
             label="Booking Date"
@@ -86,8 +71,7 @@ export default function Reservations() {
 
       <Button
         variant="contained"
-        name="Book Venue"
-        onClick={handleBookVenue} // 5. Handle click to dispatch
+        onClick={handleBookVenue}
       >
         Book Venue
       </Button>

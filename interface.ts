@@ -20,8 +20,9 @@ interface VenueItem {
   }
 
   interface BookingItem {
-    nameLastname: string;
-    tel: string;
-    venue: string;
-    bookDate: string;
-  }
+  _id: string;                 // 🔥 สำคัญมาก (ใช้ delete/update)
+  reservationDate: string;     // จาก backend
+  user: string;
+  coworkingSpace: string;
+  status: string;
+}
