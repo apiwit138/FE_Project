@@ -1,28 +1,34 @@
-interface VenueItem {
-    _id: string,
-    name: string,
-    address: string,
-    district: string,
-    province: string,
-    postalcode: string,
-    tel: string,
-    picture: string,
-    dailyrate: number,
-    __v: number,
-    id: string
-  }
-  
-  interface VenueJson {
-    success: boolean,
-    count: number,
-    pagination: Object,
-    data: VenueItem[]
-  }
+// แก้ไขในไฟล์ src/interface.ts
 
-  interface BookingItem {
-  _id: string;                 // 🔥 สำคัญมาก (ใช้ delete/update)
-  reservationDate: string;     // จาก backend
-  user: string;
-  coworkingSpace: string;
+export interface VenueItem {
+  _id: string;
+  // ...
+}
+
+export interface VenueJson {
+  // ...
+  data: VenueItem[];
+}
+
+export interface User {
+  _id: string;
+  name: string;
+}
+
+export interface CoworkingSpace {
+  _id: string;
+  name: string;
+  address: string;
+  telephoneNumber: string;
+  openTime: string;
+  closeTime: string;
+}
+
+export interface BookingItem {
+  _id: string;
+  reservationDate: string;
+  user: User;
+  coworkingSpace: CoworkingSpace;
   status: string;
+  createdAt: string;
 }
