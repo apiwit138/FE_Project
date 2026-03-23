@@ -10,8 +10,8 @@ import ReduxProvider from '@/redux/ReduxProvider' // 1. Import ReduxProvider ท
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Venue Explorer',
-  description: 'Book your favorite venues',
+  title: 'Coworking Booking',
+  description: 'Book your favorite Co-WorkingSpaces',
 }
 
 export default async function RootLayout({
